@@ -13,4 +13,5 @@ public interface IPostService {
     List<ResponseGetPosts> get_posts(RequestGetPosts requestGetPosts);
 
     List<ResponseMixByOwners> mix_by_owners(List<RequestMixByOwners> requestMixByOwners);
+
 }

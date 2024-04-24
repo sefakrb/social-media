@@ -51,23 +51,35 @@ public class PostService implements IPostService {
     @Override
     public List<ResponseGetPosts> get_posts(RequestGetPosts requestGetPosts) {
         List<ResponseGetPosts> responseGetPosts = new ArrayList<>();
-        for (int i = 0; i < requestGetPosts.getPost_ids().size(); i++) {
-            Post post = postRepository.postById(requestGetPosts.getPost_ids().get(i));
+        List<Post> existingPostsList = postRepository.postsById(requestGetPosts.getPost_ids());
+        List<Like> requestedUserLikes = likeRepository.likesByUserIdAndPostIds(requestGetPosts.getUser_id(), requestGetPosts.getPost_ids());
+        HashMap<Integer, Post> existingPostsMap = new HashMap<>();
+        List<Integer> postOwnerIds = new ArrayList<>();
 
-            if (Objects.nonNull(post)) {
+        for (Post post : existingPostsList) {
+            existingPostsMap.putIfAbsent(post.getId(), post);
+            postOwnerIds.add(post.getUser_id());
+        }
+
+        List<User> postOwnersList = userRepository.findUsersByPostIds(postOwnerIds);
+        List<Follow> requestedUserFollowList = followRepository.findFollowsByUserIdAndOwnerIds(requestGetPosts.getUser_id(), postOwnerIds);
+
+        for (int i = 0; i < requestGetPosts.getPost_ids().size(); i++) {
+            if (Objects.isNull(existingPostsMap.get(requestGetPosts.getPost_ids().get(i)))) {
+                responseGetPosts.add(null);
+            } else {
+                Post post = existingPostsMap.get(requestGetPosts.getPost_ids().get(i));
                 ResponseGetPosts getPosts = new ResponseGetPosts();
                 getPosts.setId(post.getId());
                 getPosts.setDescription(post.getDescription());
                 getPosts.setImage(post.getImage());
                 getPosts.setCreated_at(post.getCreated_at());
-                Boolean controlRequestedUserLike = controlRequestedUserLike(requestGetPosts.getUser_id(), post);
+                Boolean controlRequestedUserLike = controlRequestedUserLike(requestedUserLikes, post.getId());
                 getPosts.setLiked(controlRequestedUserLike);
-                GetPostsUserDto getPostsUserDto = addOwner(requestGetPosts.getUser_id(), post.getUser_id());
+                GetPostsUserDto getPostsUserDto = addOwner(postOwnersList, requestedUserFollowList, post);
                 getPosts.setOwner(getPostsUserDto);
 
                 responseGetPosts.add(getPosts);
-            } else {
-                responseGetPosts.add(null);
             }
         }
         return responseGetPosts;
@@ -76,7 +88,6 @@ public class PostService implements IPostService {
     @Override
     public List<ResponseMixByOwners> mix_by_owners(List<RequestMixByOwners> requestMixByOwners) {
         HashMap<Integer, CountDto> counter = new HashMap<>();
-
         RequestMixByOwners[] responseList = new RequestMixByOwners[requestMixByOwners.size()];
 
         for (int i = 0; i < requestMixByOwners.size(); i++) {
@@ -94,50 +105,54 @@ public class PostService implements IPostService {
 
         Integer[] uniqueKeys = counter.keySet().toArray(new Integer[0]);
         int uniqueKeysLength = uniqueKeys.length;
+        int loopTimes = requestMixByOwners.size();
+        int lastAddedIndex = 0;
 
-        for (int i = 0; i <= requestMixByOwners.size(); i++) {
+        for (int i = 0; i < loopTimes; i++) {
             CountDto currentKey = counter.get(uniqueKeys[i % uniqueKeysLength]);
-
             if (currentKey.getPostCount() > 0) {
-                if (i == requestMixByOwners.size()) {
-                    responseList[i - 1] = requestMixByOwners.get(currentKey.getStartIndex());
-                } else {
-                    responseList[i] = requestMixByOwners.get(currentKey.getStartIndex());
-                }
+                responseList[lastAddedIndex] = requestMixByOwners.get(currentKey.getStartIndex());
+                lastAddedIndex = lastAddedIndex + 1;
                 currentKey.setStartIndex(currentKey.getStartIndex() + 1);
                 currentKey.setPostCount(currentKey.getPostCount() - 1);
+            } else {
+                loopTimes = loopTimes + 1;
             }
         }
-
         return postMapper.requestListToResponseList(responseList);
     }
 
-    private GetPostsUserDto addOwner(Integer userId, Integer ownerId) {
-        User owner = userRepository.findCustomById(ownerId);
-
+    private GetPostsUserDto addOwner(List<User> postOwnersList, List<Follow> requestedUserFollowList, Post post) {
         GetPostsUserDto getPostsUserDto = new GetPostsUserDto();
-        getPostsUserDto.setId(owner.getId());
-        getPostsUserDto.setUsername(owner.getUsername());
-        getPostsUserDto.setFull_name(owner.getFull_name());
-        getPostsUserDto.setProfile_picture(owner.getProfile_picture());
-        Boolean controlRequestedUserFollow = controlRequestedUserFollow(userId, ownerId);
-        getPostsUserDto.setFollowed(controlRequestedUserFollow);
+        boolean isFollow = false;
 
+        for (Follow follow : requestedUserFollowList) {
+            if (post.getUser_id().equals(follow.getFollowing_id())) {
+                isFollow = true;
+                break;
+            }
+        }
+
+        for (User user : postOwnersList) {
+            if (post.getUser_id().equals(user.getId())) {
+                getPostsUserDto.setId(user.getId());
+                getPostsUserDto.setUsername(user.getUsername());
+                getPostsUserDto.setFull_name(user.getFull_name());
+                getPostsUserDto.setProfile_picture(user.getProfile_picture());
+                getPostsUserDto.setFollowed(isFollow);
+            }
+        }
         return getPostsUserDto;
-
     }
 
-    private Boolean controlRequestedUserLike(Integer userId, Post post) {
-        Like like = likeRepository.likeByUserIdAndPostId(userId, post.getId());
-        return Objects.nonNull(like);
-
+    private Boolean controlRequestedUserLike(List<Like> requestedUserLikes, Integer postId) {
+        for (Like like : requestedUserLikes) {
+            if (Objects.equals(like.getPost_id(), postId)) {
+                return true;
+            }
+        }
+        return false;
     }
-
-    private Boolean controlRequestedUserFollow(Integer userId, Integer ownerId) {
-        Follow follow = followRepository.followByUserIdAndOwnerId(userId, ownerId);
-        return Objects.nonNull(follow);
-    }
-
 
 }
 
