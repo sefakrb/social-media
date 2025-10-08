@@ -1,42 +1,69 @@
 package scorp.socialmedia.follow.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import scorp.socialmedia.common.model.entity.BaseModel;
+import scorp.socialmedia.user.model.entity.User;
 
+/**
+ * Follow entity representing a follow relationship between users.
+ * Tracks who follows whom in the social media application.
+ */
 @Entity
-@Table(name = "follow")
+@Table(name = "follows", 
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = {"follower_id", "following_id"})
+       })
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class Follow extends BaseModel {
+
     @Id
-    @GeneratedValue
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(name = "follower_id")
-    private Integer follower_id;
+    @NotNull(message = "Follower is required")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "follower_id", nullable = false)
+    private User follower;
 
-    @Column(name = "following_id")
-    private Integer following_id;
+    @NotNull(message = "Following user is required")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "following_id", nullable = false)
+    private User following;
 
-    public Integer getId() {
-        return id;
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
+    // Helper methods
+    public Long getFollowerId() {
+        return follower != null ? follower.getId() : null;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setFollowerId(Long followerId) {
+        if (follower == null) {
+            follower = new User();
+        }
+        follower.setId(followerId);
     }
 
-    public Integer getFollower_id() {
-        return follower_id;
+    public Long getFollowingId() {
+        return following != null ? following.getId() : null;
     }
 
-    public void setFollower_id(Integer follower_id) {
-        this.follower_id = follower_id;
-    }
-
-    public Integer getFollowing_id() {
-        return following_id;
-    }
-
-    public void setFollowing_id(Integer following_id) {
-        this.following_id = following_id;
+    public void setFollowingId(Long followingId) {
+        if (following == null) {
+            following = new User();
+        }
+        following.setId(followingId);
     }
 }

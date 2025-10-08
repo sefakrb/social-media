@@ -1,11 +1,12 @@
 package scorp.socialmedia.user.service;
 
-import scorp.socialmedia.user.model.entity.User;
-import scorp.socialmedia.user.model.dto.RequestCreateUser;
-import scorp.socialmedia.user.model.dto.ResponseCreateUser;
+import org.springframework.data.domain.Page;
+import scorp.socialmedia.user.model.dto.CreateUserRequest;
+import scorp.socialmedia.user.model.dto.CreateUserResponse;
+import scorp.socialmedia.user.model.dto.UserResponse;
 
 public interface IUserService {
-    ResponseCreateUser createUser(RequestCreateUser requestCreateUser);
-
-    User getUser(Integer id);
+    CreateUserResponse createUser(CreateUserRequest createUserRequest);
+    UserResponse getUserById(Long id);
+    Page<UserResponse> getAllUsers(int page, int size);
 }

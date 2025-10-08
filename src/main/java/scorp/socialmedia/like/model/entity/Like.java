@@ -1,45 +1,70 @@
 package scorp.socialmedia.like.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import scorp.socialmedia.common.model.entity.BaseModel;
 import scorp.socialmedia.post.model.entity.Post;
 import scorp.socialmedia.user.model.entity.User;
 
+/**
+ * Like entity representing a like relationship between users and posts.
+ * Tracks which users have liked which posts.
+ */
 @Entity
-@Table(name = "likes")
+@Table(name = "likes", 
+       uniqueConstraints = {
+           @UniqueConstraint(columnNames = {"user_id", "post_id"})
+       })
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class Like extends BaseModel {
+
     @Id
-    @GeneratedValue
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(name = "user_id")
-    private Integer user_id;
+    @NotNull(message = "User is required")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "post_id")
-    private Integer post_id;
+    @NotNull(message = "Post is required")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
-    public Integer getId() {
-        return id;
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
+    // Helper methods
+    public Long getUserId() {
+        return user != null ? user.getId() : null;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public void setUserId(Long userId) {
+        if (user == null) {
+            user = new User();
+        }
+        user.setId(userId);
     }
 
-    public Integer getUser_id() {
-        return user_id;
+    public Long getPostId() {
+        return post != null ? post.getId() : null;
     }
 
-    public void setUser_id(Integer user_id) {
-        this.user_id = user_id;
-    }
-
-    public Integer getPost_id() {
-        return post_id;
-    }
-
-    public void setPost_id(Integer post_id) {
-        this.post_id = post_id;
+    public void setPostId(Long postId) {
+        if (post == null) {
+            post = new Post();
+        }
+        post.setId(postId);
     }
 }

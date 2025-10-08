@@ -1,13 +1,14 @@
 package scorp.socialmedia.like.service;
 
-import scorp.socialmedia.like.dto.RequestLikePost;
-import scorp.socialmedia.like.dto.ResponseLikePost;
-import scorp.socialmedia.like.model.entity.Like;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import scorp.socialmedia.like.dto.CreateLikeRequest;
+import scorp.socialmedia.like.dto.LikeResponse;
 
 public interface ILikeService {
-    ResponseLikePost likePost(RequestLikePost requestLikePost);
-
-    List<Like> geLikedPosts();
+    LikeResponse likePost(CreateLikeRequest createLikeRequest);
+    Page<LikeResponse> getAllLikes(int page, int size);
+    Page<LikeResponse> getLikesByPost(Long postId, int page, int size);
+    Page<LikeResponse> getLikesByUser(Long userId, int page, int size);
+    void unlikePost(Long userId, Long postId);
+    boolean hasUserLikedPost(Long userId, Long postId);
 }

@@ -3,7 +3,7 @@ package scorp.socialmedia;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import scorp.socialmedia.controller.HelloWorldController;
+import scorp.socialmedia.controller.HealthController;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,18 +11,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SocialmediaApplicationTests {
 
 	@Autowired
-	private HelloWorldController helloWorldController;
+	private HealthController healthController;
 
 	@Test
 	void contextLoads() {
 	}
 
 	@Test
-	void testHelloWorldController(){
-		Integer sumResult = helloWorldController.sum();
-		Integer result = 4;
-
-		assertThat(sumResult).isEqualTo(result);
+	void testHealthController(){
+		// Test that the health controller is properly wired
+		assertThat(healthController).isNotNull();
 	}
 
 }

@@ -1,13 +1,13 @@
 package scorp.socialmedia.follow.service;
 
-import scorp.socialmedia.follow.model.dto.RequestFollow;
-import scorp.socialmedia.follow.model.dto.ResponseFollow;
-import scorp.socialmedia.follow.model.entity.Follow;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import scorp.socialmedia.follow.model.dto.CreateFollowRequest;
+import scorp.socialmedia.follow.model.dto.FollowResponse;
 
 public interface IFollowService {
-    ResponseFollow follow(RequestFollow requestFollow);
-
-    List<Follow> getFollows();
+    FollowResponse createFollow(CreateFollowRequest createFollowRequest);
+    Page<FollowResponse> getAllFollows(int page, int size);
+    Page<FollowResponse> getFollowing(Long userId, int page, int size);
+    Page<FollowResponse> getFollowers(Long userId, int page, int size);
+    void unfollow(Long followerId, Long followingId);
 }

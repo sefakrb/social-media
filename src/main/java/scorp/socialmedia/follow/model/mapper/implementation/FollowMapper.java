@@ -1,8 +1,8 @@
 package scorp.socialmedia.follow.model.mapper.implementation;
 
 import org.springframework.stereotype.Component;
-import scorp.socialmedia.follow.model.dto.RequestFollow;
-import scorp.socialmedia.follow.model.dto.ResponseFollow;
+import scorp.socialmedia.follow.model.dto.CreateFollowRequest;
+import scorp.socialmedia.follow.model.dto.FollowResponse;
 import scorp.socialmedia.follow.model.entity.Follow;
 import scorp.socialmedia.follow.model.mapper.IFollowMapper;
 import scorp.socialmedia.user.model.entity.User;
@@ -10,18 +10,20 @@ import scorp.socialmedia.user.model.entity.User;
 @Component
 public class FollowMapper implements IFollowMapper {
     @Override
-    public Follow requestFollowToFollow(RequestFollow requestFollow) {
+    public Follow requestFollowToFollow(CreateFollowRequest createFollowRequest) {
         Follow follow = new Follow();
-        follow.setFollower_id(requestFollow.getFollower_id());
-        follow.setFollowing_id(requestFollow.getFollowing_id());
+        follow.setFollowerId(createFollowRequest.followerId());
+        follow.setFollowingId(createFollowRequest.followingId());
         return follow;
     }
 
     @Override
-    public ResponseFollow followToResponseFollow(Follow follow) {
-        ResponseFollow responseFollow = new ResponseFollow();
-        responseFollow.setFollower_id(follow.getFollower_id());
-        responseFollow.setFollowing_id(follow.getFollowing_id());
-        return responseFollow;
+    public FollowResponse followToResponseFollow(Follow follow) {
+        return new FollowResponse(
+                follow.getId(),
+                follow.getFollowerId(),
+                follow.getFollowingId(),
+                follow.getCreatedAt()
+        );
     }
 }
